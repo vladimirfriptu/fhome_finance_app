@@ -5,10 +5,13 @@ import 'package:flutter_app/store/AppStateModel.dart';
 import 'package:flutter_app/store/store.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:redux/redux.dart';
+import 'package:redux_thunk/redux_thunk.dart';
+import 'package:redux_logging/redux_logging.dart';
 
 void main() {
   final store = Store<AppState>(
     appStateReducer,
+    middleware: [thunkMiddleware, new LoggingMiddleware.printer()],
     initialState: AppState.initialState(),
   );
 

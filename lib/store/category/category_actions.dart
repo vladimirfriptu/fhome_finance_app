@@ -2,7 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_app/models/CategoryModel.dart';
 
 class AddCategoryAction {
-  final CategoryModel category;
+  final CategoryModel payload;
 
-  AddCategoryAction({ @required this.category});
+  AddCategoryAction({ @required this.payload });
+}
+
+class SetCategoriesAction {
+  final List<CategoryModel> payload;
+
+  SetCategoriesAction({ @required this.payload });
 }

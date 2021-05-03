@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app/models/CategoryModel.dart';
-import 'package:flutter_app/providers/gsheets.dart';
 import 'package:flutter_app/store/AppStateModel.dart';
 import 'package:flutter_app/store/category/category_actions.dart';
+import 'package:flutter_app/store/category/category_thunk.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 
 class MainScreen extends StatelessWidget {
@@ -17,6 +17,9 @@ class MainScreen extends StatelessWidget {
           title: Text(_title),
         ),
         body: StoreConnector<AppState, List<CategoryModel>>(
+          onInit: (store) {
+            store.dispatch(CategoryThunks.fetchAllCategories());
+          },
           converter: (store) => store.state.categories,
           builder: (context, categories) => Container(
             padding: EdgeInsets.all(20.0),
@@ -33,16 +36,12 @@ class MainScreen extends StatelessWidget {
           ),
         ),
         floatingActionButton: StoreConnector<AppState, dynamic>(
-          converter: (store) => (CategoryModel category) => store.dispatch(AddCategoryAction(category: category)),
+          converter: (store) => (CategoryModel category) =>
+              store.dispatch(AddCategoryAction(payload: category)),
           builder: (context, setCategory) => FloatingActionButton(
-              child: Icon(Icons.add),
-              onPressed: () async {
-                final _categories = await fhomeFinanceSheet.getCategories();
-
-                for (var prop in _categories) {
-                  setCategory(prop);
-                }
-              }),
+            child: Icon(Icons.add),
+            onPressed: () => Navigator.pushNamed(context, '/transaction'),
+          ),
         ));
   }
 }
