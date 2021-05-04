@@ -21,19 +21,16 @@ class MainScreen extends StatelessWidget {
             store.dispatch(CategoryThunks.fetchAllCategories());
           },
           converter: (store) => store.state.categories,
-          builder: (context, categories) => Container(
-            padding: EdgeInsets.all(20.0),
-            child: categories.isEmpty
-                ? Text("Categories did not uploaded")
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: categories
-                        .map((e) => Text(
-                              "${e.name}",
-                            ))
-                        .toList(),
-                  ),
-          ),
+          builder: (context, categories) {
+            return Container(
+              alignment: Alignment.center,
+              child: Text(
+                "Categories did not uploaded",
+                style: TextStyle(fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            );
+          },
         ),
         floatingActionButton: StoreConnector<AppState, dynamic>(
           converter: (store) => (CategoryModel category) =>
