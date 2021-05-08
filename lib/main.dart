@@ -7,8 +7,11 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
 import 'package:redux_logging/redux_logging.dart';
+import 'package:intl/intl.dart';
 
 void main() {
+  Intl.defaultLocale = 'ru_UA';
+
   final store = Store<AppState>(
     appStateReducer,
     middleware: [thunkMiddleware, new LoggingMiddleware.printer()],

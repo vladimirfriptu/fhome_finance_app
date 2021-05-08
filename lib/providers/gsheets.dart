@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter_app/models/CategoryModel.dart';
 import 'package:gsheets/gsheets.dart';
 
@@ -36,7 +34,7 @@ class _FHomeFinanceSheet {
         await _currentMonthSheet.values.column(2, fromRow: 9, length: 23);
 
     return categories
-        .map((e) => CategoryModel(name: e, id: Random().nextInt(100)))
+        .map((e) => CategoryModel(name: e))
         .toList();
   }
 }

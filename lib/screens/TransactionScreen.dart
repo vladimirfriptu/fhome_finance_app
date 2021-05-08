@@ -1,11 +1,12 @@
-import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/models/CategoryModel.dart';
 import 'package:flutter_app/store/AppStateModel.dart';
+import 'package:flutter_app/utils/DateTimeUtil.dart';
+import 'package:flutter_app/widgets/CategoriesModalBottomSheet.dart';
+import 'package:flutter_app/widgets/ReadonlyTextField.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:flutter_app/widgets/CategoryCard.dart';
+import 'package:intl/intl.dart';
 
 class TransactionScreen extends StatefulWidget {
   String screenTitle = 'Создание транзакции';
@@ -17,8 +18,66 @@ class TransactionScreen extends StatefulWidget {
 }
 
 class _TransactionScreen extends State<TransactionScreen> {
-  final _formKey = GlobalKey<FormState>();
-  int _activeCategoryId;
+  final TextEditingController _categoryFieldController =
+      TextEditingController();
+  final TextEditingController _dateFieldController = TextEditingController();
+  final TextEditingController _cacheFieldController = TextEditingController();
+  CategoryModel _activeCategory;
+  DateTime _activeDate = DateTime.now();
+  bool _isValidForm = false;
+
+  selectElement(CategoryModel category) {
+    setState(() {
+      _activeCategory = category;
+    });
+    _categoryFieldController.text = category.name;
+    CategoriesModalBottomSheet.closeModal(context);
+    validate();
+  }
+
+  Future<void> openDatePicker() async {
+    final DateTime now = DateTime.now();
+    final DateTime date = await showDatePicker(
+        context: context,
+        initialDate: _activeDate,
+        firstDate: DateTime(now.year),
+        lastDate: now);
+
+    if (DateTimeUtil.isMatchToday(matchDate: date))
+      _dateFieldController.text = 'Сегодня';
+    else
+      _dateFieldController.text = DateFormat('dd MMM').format(date);
+
+    setState(() {
+      _activeDate = date;
+    });
+
+    validate();
+  }
+
+  void submitForm() {
+    print(_activeCategory.name);
+    print(_activeDate);
+    print(_cacheFieldController.text);
+  }
+
+  void validate() {
+    setState(() {
+      _isValidForm = _activeDate != null && _activeDate != null;
+    });
+  }
+
+  @override
+  void initState() {
+    _dateFieldController.text = 'Сегодня';
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _categoryFieldController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,66 +85,63 @@ class _TransactionScreen extends State<TransactionScreen> {
       appBar: AppBar(
         title: Text("${widget.screenTitle}"),
       ),
-      body: Form(
-          key: _formKey,
-          child: StoreConnector<AppState, List<CategoryModel>>(
-              converter: (store) => store.state.categories,
-              builder: (context, categories) {
-                int _centerIndex = (categories.length / 2).round();
-                List<CategoryModel> left = categories.sublist(0, _centerIndex);
-                List<CategoryModel> right =
-                    categories.sublist(_centerIndex, categories.length);
-
-                final int _childCount = max(left.length, right.length);
-
-                return CustomScrollView(
-                  slivers: <Widget>[
-                    SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                            (BuildContext context, int index) {
-                      CategoryModel leftItem =
-                          index >= left.length ? null : left[index];
-                      CategoryModel rightItem =
-                          index >= right.length ? null : right[index];
-
-                      final double cardWidth =
-                          MediaQuery.of(context).size.width / 2 - 10;
-
-                      return Row(
-                        children: [
-                          leftItem != null
-                              ? Container(
-                                  margin: EdgeInsets.symmetric(vertical: 5),
-                                  child: CategoryCard(
-                                    title: leftItem.name,
-                                    isActive: _activeCategoryId == leftItem.id,
-                                    icon: Icons.add_call,
-                                    onSelect: () => setState(
-                                        () => _activeCategoryId = leftItem.id),
-                                  ),
-                                  width: cardWidth,
-                                )
-                              : Container(),
-                          rightItem != null
-                              ? Container(
-                                  margin: EdgeInsets.symmetric(
-                                      vertical: 5, horizontal: 10),
-                                  child: CategoryCard(
-                                    title: rightItem.name,
-                                    isActive: _activeCategoryId == rightItem.id,
-                                    icon: Icons.add_call,
-                                    onSelect: () => setState(
-                                        () => _activeCategoryId = rightItem.id),
-                                  ),
-                                  width: cardWidth,
-                                )
-                              : Container(),
-                        ],
-                      );
-                    }, childCount: _childCount))
+      body: StoreConnector<AppState, List<CategoryModel>>(
+          converter: (store) => store.state.categories,
+          builder: (context, categories) => Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 30),
+                child: Column(
+                  children: [
+                    ReadonlyTextField(
+                      controller: _categoryFieldController,
+                      icon: Icons.calendar_today,
+                      label: 'Категория',
+                      space: 15.0,
+                      onTap: () {
+                        CategoriesModalBottomSheet.showSheetModal(
+                            context: context,
+                            categories: categories,
+                            onSelectElement: selectElement);
+                      },
+                    ),
+                    ReadonlyTextField(
+                      controller: _dateFieldController,
+                      label: 'Дата',
+                      icon: Icons.calendar_today_outlined,
+                      onTap: openDatePicker,
+                      space: 15.0,
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(bottom: 15.0),
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        controller: _cacheFieldController,
+                        decoration: InputDecoration(
+                            labelText: "Сумма",
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.attach_money)),
+                      ),
+                    ),
                   ],
-                );
-              })),
+                ),
+              )),
+      persistentFooterButtons: [
+        Container(
+          width: MediaQuery.of(context).size.width,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context)),
+              IconButton(
+                icon: Icon(Icons.save),
+                onPressed: _isValidForm ? submitForm : null,
+                color: _isValidForm ? Colors.white : Colors.white24,
+              )
+            ],
+          ),
+        )
+      ],
     );
   }
 }
